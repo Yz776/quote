@@ -91,37 +91,31 @@ src/
 
 ## Catatan Font untuk Deployment
 
-Render SVG → PNG menggunakan **librsvg** (di dalam `sharp`) yang bergantung pada
-**fontconfig** untuk menemukan font di sistem.
+Pada awalnya gambar "rusak" saat di-deploy ke Vercel — background gradient
+terender tapi teks quote tidak muncul. Setelah di-diagnosa, akar masalahnya
+adalah:
 
-Font yang dipakai di SVG:
-- Serif: `'Noto Serif SC', 'Tinos', 'Liberation Serif', 'DejaVu Serif'`
-- Sans:  `'Noto Sans SC', 'Carlito', 'Liberation Sans', 'DejaVu Sans'`
+1. **Font sistem tidak tersedia** di Vercel Lambda (hanya ada font minimal).
+2. **`sharp`/`librsvg` di Vercel** tidak bisa render `@font-face` dengan
+   base64 `data:` URL (sekalipun SVG sudah berisi font lengkap).
 
-### Di lokal / sandbox (sudah berjalan)
+### Solusi yang akhirnya dipakai
 
-Font tersebut sudah terinstall di sistem (`/usr/share/fonts/truetype/...`), sehingga
-gambar langsung tampil dengan benar.
+Stack: **`satori` + `@resvg/resvg-js`** (bukan `sharp`).
 
-### Di Vercel / platform serverless lainnya
+- `satori` (dari Vercel) menerima font sebagai `ArrayBuffer` eksplisit →
+  tidak bergantung pada fontconfig/librsvg.
+- `@resvg/resvg-js` (Rust-based) render SVG → PNG dengan dukungan font
+  yang jauh lebih baik daripada librsvg.
 
-Vercel menggunakan **AWS Lambda** sebagai runtime yang **tidak menyertakan font CJK
-atau serif额外 secara default**. Akibatnya gambar mungkin saja tampil "rusak" /
-teks tidak ter-render jika di-deploy tanpa konfigurasi font tambahan.
+Font di-bundle sebagai **base64 string** di `src/lib/font-data.ts`
+(di-generate oleh `scripts/gen-font-base64.js` dari file `.ttf` di
+`public/fonts/`). Ini menjamin font ter-bundle ke serverless function
+(Vercel Lambda tidak meng-include `public/` ke function bundle).
 
-**Solusi (pilih salah satu):**
-
-1. **Bundle font ke dalam project** — taruh file `.ttf` di `public/fonts/` lalu
-   install saat startup. Contoh: gunakan `@fontsource` package atau salin manual.
-
-2. **Embed font sebagai base64 di SVG** — bikin SVG self-contained, tidak bergantung
-   font sistem. Trade-off: SVG jadi lebih besar (~200-500KB per font).
-
-3. **Gunakan Satori** (`@vercel/satori`) — library dari Vercel yang dirancang khusus
-   untuk render teks di serverless dengan dukungan font yang lebih baik.
-
-4. **Self-host di VPS** — paling mudah: install package font di OS
-   (`apt install fonts-noto-cjk fonts-liberation`), lalu jalankan Next.js di sana.
+`next.config.ts` juga menambahkan `serverExternalPackages` agar
+package native (`@resvg/resvg-js`, `satori`) di-resolve via Node.js
+bukan di-bundle oleh Turbopack.
 
 > Sumber quote: [api.kangwifi.eu.org](https://api.kangwifi.eu.org/info/random-quotes) —
 > terima kasih KangWiFi.
