@@ -12,8 +12,14 @@
  *   self-contained, tidak bergantung font sistem host.
  */
 
-import fs from "node:fs";
-import path from "node:path";
+import {
+  SERIF_REGULAR,
+  SERIF_BOLD,
+  SERIF_ITALIC,
+  SANS_REGULAR,
+  SANS_BOLD,
+  SANS_ITALIC,
+} from "./font-data";
 
 export interface QuoteData {
   id: number;
@@ -52,71 +58,43 @@ export async function fetchQuote(): Promise<QuoteData> {
 
 /* ============================================================
  * Font loading & caching
- * ============================================================ */
+ * ============================================================
+ * Font di-import sebagai base64 string dari font-data.ts (yang
+ * di-generate dari public/fonts/*.ttf). Pendekatan ini menjamin
+ * font ter-bundle ke serverless function (Vercel Lambda) tanpa
+ * bergantung pada akses filesystem ke direktori public/.
+ */
 
-interface FontFile {
+interface FontDef {
   family: string;
   weight: number;
   style: "normal" | "italic";
-  path: string;
+  data: string; // base64 string
 }
 
-const FONT_FILES: FontFile[] = [
-  { family: "QuoteSerif", weight: 400, style: "normal", path: "LiberationSerif-Regular.ttf" },
-  { family: "QuoteSerif", weight: 700, style: "normal", path: "LiberationSerif-Bold.ttf" },
-  { family: "QuoteSerif", weight: 400, style: "italic", path: "LiberationSerif-Italic.ttf" },
-  { family: "QuoteSans", weight: 400, style: "normal", path: "Carlito-Regular.ttf" },
-  { family: "QuoteSans", weight: 700, style: "normal", path: "Carlito-Bold.ttf" },
-  { family: "QuoteSans", weight: 400, style: "italic", path: "Carlito-Italic.ttf" },
+const FONT_DEFS: FontDef[] = [
+  { family: "QuoteSerif", weight: 400, style: "normal", data: SERIF_REGULAR },
+  { family: "QuoteSerif", weight: 700, style: "normal", data: SERIF_BOLD },
+  { family: "QuoteSerif", weight: 400, style: "italic", data: SERIF_ITALIC },
+  { family: "QuoteSans", weight: 400, style: "normal", data: SANS_REGULAR },
+  { family: "QuoteSans", weight: 700, style: "normal", data: SANS_BOLD },
+  { family: "QuoteSans", weight: 400, style: "italic", data: SANS_ITALIC },
 ];
 
 let cachedFontFaceCss: string | null = null;
 
-/**
- * Baca file font dari /public/fonts, encode ke base64, dan bangun
- * @font-face CSS yang akan di-embed di <defs> SVG.
- *
- * Di Vercel, current working directory adalah root project, jadi
- * path "public/fonts/..." relatif valid. Di environment lain (sandbox),
- * kita pakai process.cwd() sebagai fallback.
- */
+/** Bangun @font-face CSS dengan base64 data URLs (self-contained) */
 function getFontFaceCss(): string {
   if (cachedFontFaceCss) return cachedFontFaceCss;
 
   const chunks: string[] = [];
-  for (const f of FONT_FILES) {
-    // Coba beberapa kemungkinan path
-    const candidates = [
-      path.join(process.cwd(), "public", "fonts", f.path),
-      path.join(process.cwd(), "fonts", f.path),
-      path.join(__dirname, "..", "..", "..", "public", "fonts", f.path),
-    ];
-
-    let fontBuffer: Buffer | null = null;
-    for (const p of candidates) {
-      try {
-        if (fs.existsSync(p)) {
-          fontBuffer = fs.readFileSync(p);
-          break;
-        }
-      } catch {
-        /* ignore, try next */
-      }
-    }
-
-    if (!fontBuffer) {
-      // Jika font tidak ditemukan, skip — akan fallback ke font sistem
-      // (di sandbox ini OK karena font tersedia, di Vercel seharusnya
-      //  selalu ketemu karena di-bundle di repo)
-      continue;
-    }
-
-    const b64 = fontBuffer.toString("base64");
+  for (const f of FONT_DEFS) {
+    if (!f.data) continue;
     chunks.push(`@font-face {
   font-family: "${f.family}";
   font-weight: ${f.weight};
   font-style: ${f.style};
-  src: url("data:font/ttf;base64,${b64}") format("truetype");
+  src: url("data:font/ttf;base64,${f.data}") format("truetype");
 }`);
   }
 
