@@ -1,0 +1,21 @@
+{
+  "name": "quote-image-server",
+  "version": "1.0.0",
+  "description": "Server Node.js yang me-render random quote dari API KangWifi menjadi gambar PNG (mirip ipleak.nixel.dev/image/ip).",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sharp": "^0.33.5"
+  },
+  "allowScripts": {
+    "sharp@0.33.5": true
+  }
+}
