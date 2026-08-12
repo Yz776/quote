@@ -62,9 +62,9 @@ interface FontFile {
 }
 
 const FONT_FILES: FontFile[] = [
-  { family: "QuoteSerif", weight: 400, style: "normal", path: "Tinos-Regular.ttf" },
-  { family: "QuoteSerif", weight: 700, style: "normal", path: "Tinos-Bold.ttf" },
-  { family: "QuoteSerif", weight: 400, style: "italic", path: "Tinos-Italic.ttf" },
+  { family: "QuoteSerif", weight: 400, style: "normal", path: "LiberationSerif-Regular.ttf" },
+  { family: "QuoteSerif", weight: 700, style: "normal", path: "LiberationSerif-Bold.ttf" },
+  { family: "QuoteSerif", weight: 400, style: "italic", path: "LiberationSerif-Italic.ttf" },
   { family: "QuoteSans", weight: 400, style: "normal", path: "Carlito-Regular.ttf" },
   { family: "QuoteSans", weight: 700, style: "normal", path: "Carlito-Bold.ttf" },
   { family: "QuoteSans", weight: 400, style: "italic", path: "Carlito-Italic.ttf" },
