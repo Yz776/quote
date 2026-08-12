@@ -36,7 +36,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -46,9 +45,24 @@ local-*
 *.log
 dev.log
 dev.out.log
+server.log
 test
 prompt
 
-server.log
 # Skills directory
 /skills/
+
+# Sandbox dev scripts
+/.zscripts/
+
+# Sample output images (generated artifacts — too large & not source)
+/download/
+
+# Database files
+/db/*.db
+/db/*.db-journal
+
+# OS / Editor
+Thumbs.db
+.vscode/
+.idea/
