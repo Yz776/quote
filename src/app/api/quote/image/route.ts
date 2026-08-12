@@ -1,27 +1,21 @@
 import { NextResponse } from "next/server";
-import sharp from "sharp";
-import { fetchQuote, buildQuoteSvg } from "@/lib/quotes";
+import { fetchQuote, renderQuotePng } from "@/lib/quotes";
 
 /**
  * GET /api/quote/image
  * Mengembalikan PNG berisi random quote dari API KangWifi.
- * Mirip konsep ipleak.nixel.dev/image/ip, tapi isinya quote.
  *
- * Response:
- *   - Content-Type: image/png
- *   - Cache-Control: no-store
- *   - X-Quote-Id / X-Quote-Author / X-Quote-Category  (metadata)
+ * Implementasi: satori (JSX -> SVG) + @resvg/resvg-js (SVG -> PNG).
+ * Font di-bundle sebagai ArrayBuffer (di-import dari font-data.ts).
  */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
     const quote = await fetchQuote();
-    const svg = buildQuoteSvg(quote);
-    const png = await sharp(Buffer.from(svg), { density: 144 })
-      .png()
-      .toBuffer();
+    const png = await renderQuotePng(quote);
 
     return new NextResponse(png, {
       status: 200,
