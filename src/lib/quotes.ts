@@ -67,6 +67,7 @@ const FONT_FILES: FontFile[] = [
   { family: "QuoteSerif", weight: 400, style: "italic", path: "Tinos-Italic.ttf" },
   { family: "QuoteSans", weight: 400, style: "normal", path: "Carlito-Regular.ttf" },
   { family: "QuoteSans", weight: 700, style: "normal", path: "Carlito-Bold.ttf" },
+  { family: "QuoteSans", weight: 400, style: "italic", path: "Carlito-Italic.ttf" },
 ];
 
 let cachedFontFaceCss: string | null = null;
@@ -223,7 +224,7 @@ ${fontFaceCss}
 
   <text x="${padX - 30}" y="${startY - 10}" font-family="${escapeXml(serifFont)}" font-size="140" fill="#f0c674" opacity="0.25" font-weight="700">"</text>
 
-  <text font-family="${escapeXml(serifFont)}" font-size="${fontSize}" fill="#ffffff" font-weight="500">
+  <text font-family="${escapeXml(serifFont)}" font-size="${fontSize}" fill="#ffffff" font-weight="400">
     ${tspans}
   </text>
 
